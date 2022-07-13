@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"start": "node app.js",
-		"dev": "nodemon app.js"
+		"dev": "nodemon -r dotenv/config app.js"
 	},
 	"author": "Sahand Masoleh",
 	"license": "ISC",
@@ -16,5 +16,8 @@
 	"devDependencies": {
 		"dotenv": "^16.0.1",
 		"nodemon": "^2.0.16"
+	},
+	"engines": {
+		"node": "18.x"
 	}
 }
