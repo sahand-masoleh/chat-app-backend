@@ -6,21 +6,26 @@ const io = new Server(http, { cors: { origin: "*" } });
 
 io.on("connection", (socket) => {
 	socket.on("message", (message) => {
-		socket.emit("message", message);
+		socket.emit("error", message);
 	});
 
 	socket.on("create-room", (roomId) => {
+		if (socket.rooms.size >= 2) return;
 		socket.join(roomId);
 	});
 
 	socket.on("join-room", (roomId, callback) => {
-		if (!io.sockets.adapter.rooms.get(roomId)) {
+		if (socket.rooms.size >= 2) return;
+
+		let room = io.sockets.adapter.rooms.get(roomId);
+		if (!room) {
 			callback({ success: false, message: "room does not exist" });
+		} else if (room.size >= 4) {
+			callback({ success: false, message: "room full" });
 		} else {
-			callback({ success: true });
 			socket.join(roomId);
-			let hostId = [...io.sockets.adapter.rooms.get(roomId).values()][0];
-			socket.to(hostId).emit("new-user", socket.id);
+			socket.broadcast.to(roomId).emit("new-user", socket.id);
+			callback({ success: true, users: [...room.values()] });
 		}
 	});
 
@@ -29,7 +34,7 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("sdp-answer", ([hostId, answer]) => {
-		socket.to(hostId).emit("sdp-answer", answer);
+		socket.to(hostId).emit("sdp-answer", [socket.id, answer]);
 	});
 });
 
