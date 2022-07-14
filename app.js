@@ -18,7 +18,10 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("join-room", (roomId, callback) => {
-		if (socket.rooms.size >= 2) return;
+		if (socket.rooms.size >= 2) {
+			callback({ success: false, message: "already in a room" });
+			return;
+		}
 
 		let room = io.sockets.adapter.rooms.get(roomId);
 		if (!room) {
@@ -30,6 +33,12 @@ io.on("connection", (socket) => {
 			socket.broadcast.to(roomId).emit("new-user", socket.id);
 			callback({ success: true, users: [...room.values()] });
 		}
+	});
+
+	socket.on("leave-room", () => {
+		const { rooms } = socket;
+		if (socket.rooms.size < 2) return;
+		socket.leave([...rooms].filter((room) => room !== socket.id)[0]);
 	});
 
 	socket.on("sdp-offer", ([guestId, offer]) => {
