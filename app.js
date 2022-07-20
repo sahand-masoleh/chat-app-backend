@@ -13,14 +13,16 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("create-room", (roomId) => {
-		if (socket.rooms.size >= 2) return;
+		if (socket.rooms.size >= 2) {
+			leaveRoom(socket);
+		}
+
 		socket.join(roomId);
 	});
 
 	socket.on("join-room", (roomId, callback) => {
 		if (socket.rooms.size >= 2) {
-			callback({ success: false, message: "already in a room" });
-			return;
+			leaveRoom(socket);
 		}
 
 		let room = io.sockets.adapter.rooms.get(roomId);
@@ -35,11 +37,7 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("leave-room", () => {
-		const { rooms } = socket;
-		if (socket.rooms.size < 2) return;
-		socket.leave([...rooms].filter((room) => room !== socket.id)[0]);
-	});
+	socket.on("leave-room", () => leaveRoom(socket));
 
 	socket.on("sdp-offer", ([guestId, offer]) => {
 		socket.to(guestId).emit("sdp-offer", [socket.id, offer]);
@@ -53,3 +51,9 @@ io.on("connection", (socket) => {
 http.listen(process.env.PORT, () => {
 	console.log(`server started on port ${process.env.PORT}`);
 });
+
+function leaveRoom(socket) {
+	const { rooms } = socket;
+	if (socket.rooms.size < 2) return;
+	socket.leave([...rooms].filter((room) => room !== socket.id)[0]);
+}
