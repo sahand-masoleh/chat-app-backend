@@ -8,10 +8,6 @@ const { Server } = require("socket.io");
 const io = new Server(http, { cors: { origin: "*" } });
 
 io.on("connection", (socket) => {
-	socket.on("message", (message) => {
-		socket.emit("error", message);
-	});
-
 	socket.on("create-room", (roomId) => {
 		if (socket.rooms.size >= 2) {
 			leaveRoom(socket);
@@ -46,6 +42,8 @@ io.on("connection", (socket) => {
 	socket.on("sdp-answer", ([hostId, answer]) => {
 		socket.to(hostId).emit("sdp-answer", [socket.id, answer]);
 	});
+
+	//TOTO: disconnect event
 });
 
 http.listen(process.env.PORT, () => {
